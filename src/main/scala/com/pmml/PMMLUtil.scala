@@ -10,7 +10,17 @@ import org.jpmml.model.visitors.{ AttributeInternerBattery, LocatorNullifier }
 
 object PMMLUtil {
 
-  def getPMML(filePath: String): PMML = {
+  def getEvaluator(filePath: String): Evaluator = {
+    val pmml = getPMML(filePath)
+    getVisitorBattery.applyTo(pmml)
+
+    val modelEvaluatorFactory = ModelEvaluatorFactory.newInstance
+    val valueFactoryFactory = ReportingValueFactoryFactory.newInstance
+    modelEvaluatorFactory.setValueFactoryFactory(valueFactoryFactory)
+    modelEvaluatorFactory.newModelEvaluator(pmml)
+  }
+
+  private def getPMML(filePath: String): PMML = {
     val is = new FileInputStream(new File(filePath))
     org.jpmml.model.PMMLUtil.unmarshal(is)
   }
@@ -21,16 +31,6 @@ object PMMLUtil {
     visitorBattery.addAll(new AttributeInternerBattery)
     visitorBattery.addAll(new ElementInternerBattery)
     visitorBattery
-  }
-
-  def getEvaluator(filePath: String): Evaluator = {
-    val pmml = getPMML(filePath)
-    getVisitorBattery.applyTo(pmml)
-
-    val modelEvaluatorFactory = ModelEvaluatorFactory.newInstance
-    val valueFactoryFactory = ReportingValueFactoryFactory.newInstance
-    modelEvaluatorFactory.setValueFactoryFactory(valueFactoryFactory)
-    modelEvaluatorFactory.newModelEvaluator(pmml).asInstanceOf[Evaluator]
   }
 
 }
